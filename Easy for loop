@@ -1,0 +1,5 @@
+Genres = ["fantasy", "drama", "comedy", "angst", "nonfiction" ]
+for x in Genres:
+  print(x)
+  if x == "angst":
+    break
