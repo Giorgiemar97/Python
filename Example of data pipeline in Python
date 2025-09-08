@@ -1,0 +1,33 @@
+import pandas as pd
+
+def read_data(file_path):
+    """Read CSV file into a DataFrame."""
+    return pd.read_csv(file_path)
+
+def clean_data(df):
+    """Clean the DataFrame by removing null values and fixing types."""
+    df = df.dropna()  # remove rows with missing values
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")  # convert to datetime
+    return df
+
+def transform_data(df):
+    """Add a new column with some transformation."""
+    if "price" in df.columns and "quantity" in df.columns:
+        df["revenue"] = df["price"] * df["quantity"]
+    return df
+
+def save_data(df, output_path):
+    """Save the DataFrame to a new CSV file."""
+    df.to_csv(output_path, index=False)
+
+def run_pipeline(input_file, output_file):
+    """Run the full data pipeline."""
+    df = read_data(input_file)
+    df = clean_data(df)
+    df = transform_data(df)
+    save_data(df, output_file)
+    print(f"Pipeline finished! Data saved to {output_file}")
+
+# Example usage:
+if __name__ == "__main__":
+    run_pipeline("input.csv", "output.csv")
