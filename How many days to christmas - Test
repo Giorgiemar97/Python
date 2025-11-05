@@ -1,0 +1,54 @@
+from datetime import datetime
+
+def days_until_christmas(input_date):
+    """Calculate days remaining until Christmas from a given date."""
+    
+    # Parse the input date
+    try:
+        date = datetime.strptime(input_date, '%Y-%m-%d')
+    except ValueError:
+        return "Invalid date format. Please use YYYY-MM-DD (e.g., 2024-12-24)"
+    
+    # Get the year from input date
+    year = date.year
+    
+    # Christmas date for that year
+    christmas = datetime(year, 12, 25)
+    
+    # If the input date is after Christmas, calculate for next year's Christmas
+    if date > christmas:
+        christmas = datetime(year + 1, 12, 25)
+    
+    # Calculate difference
+    days_left = (christmas - date).days
+    
+    # Create output message
+    if days_left == 0:
+        return "🎄 It's Christmas Day! Merry Christmas! 🎁"
+    elif days_left == 1:
+        return "🎅 1 day left to Christmas!"
+    else:
+        return f"🎄 {days_left} days left to Christmas!"
+
+
+# Example usage
+if __name__ == "__main__":
+    print("🎅 Christmas Countdown Calculator 🎄\n")
+    
+    # Test with different dates
+    test_dates = [
+        "2025-12-24",
+        "2025-04-03",
+        "2025-01-01",
+    ]
+    
+    for date in test_dates:
+        result = days_until_christmas(date)
+        print(f"Date: {date} → {result}")
+    
+    # Interactive mode
+    print("\n" + "="*50)
+    print("Try it yourself!")
+    print("="*50)
+    user_input = input("Enter a date (YYYY-MM-DD): ")
+    print(days_until_christmas(user_input))
