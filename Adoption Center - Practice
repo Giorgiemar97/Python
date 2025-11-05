@@ -1,0 +1,246 @@
+import json
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional
+import random
+
+class Pet:
+    """Represents a pet available for adoption."""
+    
+    def __init__(self, pet_id: int, name: str, species: str, breed: str, 
+                 age: int, personality: List[str], health_status: str = "Healthy"):
+        self.pet_id = pet_id
+        self.name = name
+        self.species = species
+        self.breed = breed
+        self.age = age
+        self.personality = personality
+        self.health_status = health_status
+        self.adoption_date = None
+        self.is_adopted = False
+    
+    def __repr__(self):
+        status = "Adopted" if self.is_adopted else "Available"
+        return f"{self.name} ({self.species}, {self.breed}) - Age: {self.age} - Status: {status}"
+    
+    def get_details(self):
+        """Return detailed information about the pet."""
+        return {
+            'id': self.pet_id,
+            'name': self.name,
+            'species': self.species,
+            'breed': self.breed,
+            'age': self.age,
+            'personality': ', '.join(self.personality),
+            'health': self.health_status,
+            'adopted': self.is_adopted
+        }
+
+
+class Adopter:
+    """Represents someone looking to adopt a pet."""
+    
+    def __init__(self, adopter_id: int, name: str, email: str, 
+                 preferences: Dict[str, any]):
+        self.adopter_id = adopter_id
+        self.name = name
+        self.email = email
+        self.preferences = preferences
+        self.adopted_pets = []
+    
+    def __repr__(self):
+        return f"Adopter: {self.name} (Pets adopted: {len(self.adopted_pets)})"
+
+
+class AdoptionCenter:
+    """Manages the pet adoption process."""
+    
+    def __init__(self, name: str):
+        self.name = name
+        self.pets: List[Pet] = []
+        self.adopters: List[Adopter] = []
+        self.adoption_history = []
+        self.next_pet_id = 1
+        self.next_adopter_id = 1
+    
+    def add_pet(self, name: str, species: str, breed: str, age: int, 
+                personality: List[str], health_status: str = "Healthy"):
+        """Add a new pet to the adoption center."""
+        pet = Pet(self.next_pet_id, name, species, breed, age, 
+                  personality, health_status)
+        self.pets.append(pet)
+        self.next_pet_id += 1
+        print(f"✓ Added {pet.name} to the adoption center")
+        return pet
+    
+    def register_adopter(self, name: str, email: str, preferences: Dict):
+        """Register a new potential adopter."""
+        adopter = Adopter(self.next_adopter_id, name, email, preferences)
+        self.adopters.append(adopter)
+        self.next_adopter_id += 1
+        print(f"✓ Registered adopter: {name}")
+        return adopter
+    
+    def find_matches(self, adopter: Adopter, top_n: int = 5) -> List[tuple]:
+        """Find best pet matches for an adopter based on preferences."""
+        available_pets = [p for p in self.pets if not p.is_adopted]
+        
+        if not available_pets:
+            print("No pets currently available for adoption")
+            return []
+        
+        matches = []
+        prefs = adopter.preferences
+        
+        for pet in available_pets:
+            score = 0
+            
+            # Species match
+            if prefs.get('species') and pet.species.lower() == prefs['species'].lower():
+                score += 50
+            
+            # Age preference
+            preferred_age = prefs.get('age_range', [0, 100])
+            if preferred_age[0] <= pet.age <= preferred_age[1]:
+                score += 30
+            
+            # Personality match
+            preferred_traits = prefs.get('personality', [])
+            matching_traits = set(pet.personality) & set(preferred_traits)
+            score += len(matching_traits) * 10
+            
+            # Size preference (simplified)
+            if prefs.get('size'):
+                if (prefs['size'] == 'small' and pet.age < 3) or \
+                   (prefs['size'] == 'large' and pet.age >= 3):
+                    score += 20
+            
+            matches.append((pet, score))
+        
+        # Sort by score and return top matches
+        matches.sort(key=lambda x: x[1], reverse=True)
+        return matches[:top_n]
+    
+    def process_adoption(self, adopter: Adopter, pet: Pet) -> bool:
+        """Process an adoption if the pet is available."""
+        if pet.is_adopted:
+            print(f"❌ {pet.name} has already been adopted")
+            return False
+        
+        pet.is_adopted = True
+        pet.adoption_date = datetime.now()
+        adopter.adopted_pets.append(pet)
+        
+        adoption_record = {
+            'adopter': adopter.name,
+            'pet': pet.name,
+            'date': pet.adoption_date.strftime('%Y-%m-%d'),
+            'pet_details': pet.get_details()
+        }
+        self.adoption_history.append(adoption_record)
+        
+        print(f"🎉 Congratulations! {adopter.name} has adopted {pet.name}!")
+        return True
+    
+    def get_available_pets(self, species: Optional[str] = None) -> List[Pet]:
+        """Get all available pets, optionally filtered by species."""
+        available = [p for p in self.pets if not p.is_adopted]
+        
+        if species:
+            available = [p for p in available if p.species.lower() == species.lower()]
+        
+        return available
+    
+    def generate_report(self):
+        """Generate a summary report of the adoption center."""
+        total_pets = len(self.pets)
+        adopted = sum(1 for p in self.pets if p.is_adopted)
+        available = total_pets - adopted
+        
+        species_count = {}
+        for pet in self.pets:
+            species_count[pet.species] = species_count.get(pet.species, 0) + 1
+        
+        print(f"\n{'='*50}")
+        print(f"📊 {self.name} - ADOPTION CENTER REPORT")
+        print(f"{'='*50}")
+        print(f"Total Pets: {total_pets}")
+        print(f"Adopted: {adopted}")
+        print(f"Available: {available}")
+        print(f"\nPets by Species:")
+        for species, count in species_count.items():
+            print(f"  - {species}: {count}")
+        print(f"\nTotal Adopters Registered: {len(self.adopters)}")
+        print(f"Total Adoptions Completed: {len(self.adoption_history)}")
+        print(f"{'='*50}\n")
+
+
+# Example usage and demonstration
+if __name__ == "__main__":
+    # Create adoption center
+    center = AdoptionCenter("Happy Paws Adoption Center")
+    
+    # Add pets
+    print("\n--- Adding Pets ---")
+    center.add_pet("Buddy", "Dog", "Golden Retriever", 3, 
+                   ["Friendly", "Energetic", "Playful"])
+    center.add_pet("Whiskers", "Cat", "Tabby", 2, 
+                   ["Independent", "Calm", "Curious"])
+    center.add_pet("Max", "Dog", "German Shepherd", 5, 
+                   ["Loyal", "Protective", "Smart"])
+    center.add_pet("Luna", "Cat", "Siamese", 1, 
+                   ["Playful", "Vocal", "Affectionate"])
+    center.add_pet("Charlie", "Dog", "Beagle", 4, 
+                   ["Friendly", "Curious", "Energetic"])
+    
+    # Register adopters
+    print("\n--- Registering Adopters ---")
+    sarah = center.register_adopter(
+        "Sarah Johnson", 
+        "sarah@email.com",
+        {
+            'species': 'Dog',
+            'age_range': [2, 5],
+            'personality': ['Friendly', 'Playful'],
+            'size': 'small'
+        }
+    )
+    
+    mike = center.register_adopter(
+        "Mike Chen",
+        "mike@email.com",
+        {
+            'species': 'Cat',
+            'age_range': [1, 3],
+            'personality': ['Calm', 'Independent'],
+            'size': 'small'
+        }
+    )
+    
+    # Find matches
+    print("\n--- Finding Matches for Sarah ---")
+    matches = center.find_matches(sarah, top_n=3)
+    for i, (pet, score) in enumerate(matches, 1):
+        print(f"{i}. {pet} - Match Score: {score}")
+    
+    # Process adoptions
+    print("\n--- Processing Adoptions ---")
+    if matches:
+        center.process_adoption(sarah, matches[0][0])
+    
+    # Find matches for Mike
+    print("\n--- Finding Matches for Mike ---")
+    mike_matches = center.find_matches(mike, top_n=3)
+    for i, (pet, score) in enumerate(mike_matches, 1):
+        print(f"{i}. {pet} - Match Score: {score}")
+    
+    if mike_matches:
+        center.process_adoption(mike, mike_matches[0][0])
+    
+    # Show available pets
+    print("\n--- Available Dogs ---")
+    available_dogs = center.get_available_pets(species="Dog")
+    for dog in available_dogs:
+        print(f"  {dog}")
+    
+    # Generate report
+    center.generate_report()
