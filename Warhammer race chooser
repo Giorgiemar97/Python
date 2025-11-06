@@ -1,0 +1,61 @@
+def get_warhammer_faction(number):
+    """Return a Warhammer Fantasy faction based on the number."""
+    factions = {
+        1: "Empire",
+        2: "Bretonnia",
+        3: "Dwarfs",
+        4: "High Elves",
+        5: "Dark Elves",
+        6: "Wood Elves",
+        7: "Lizardmen",
+        8: "Warriors of Chaos",
+        9: "Daemons of Chaos",
+        10: "Beastmen",
+        11: "Orcs & Goblins",
+        12: "Vampire Counts",
+        13: "Tomb Kings",
+        14: "Ogre Kingdoms",
+        15: "Skaven",
+        16: "Norsca",
+        17: "Chaos Dwarfs",
+        18: "Kislev",
+        19: "Cathay",
+        20: "Estalia",
+        21: "Tilea",
+        22: "Border Princes",
+        23: "Albion",
+        24: "Araby",
+        25: "Amazons"
+    }
+    return factions.get(number, None)
+
+def main():
+    print("Hello! So I heard you're trying to figure out what Warhammer fantasy faction you are!")
+    
+    while True:
+        print("\nWell, pick a number between 1 to 25 and I will let you know!")
+        
+        try:
+            user_input = input("Enter your number: ")
+            number = int(user_input)
+            
+            if number < 1 or number > 25:
+                print("Please pick a number between 1 and 25!")
+                continue
+            
+            faction = get_warhammer_faction(number)
+            print(f"\nOh, you picked {number}? That means your faction is {faction}.")
+            
+            play_again = input("\nDo you want to try again? (yes/no): ").lower()
+            if play_again not in ['yes', 'y']:
+                print("Thanks for playing! May the Old Ones guide you!")
+                break
+                
+        except ValueError:
+            print("That's not a valid number! Please enter a number between 1 and 25.")
+        except KeyboardInterrupt:
+            print("\n\nThanks for playing!")
+            break
+
+if __name__ == "__main__":
+    main()
