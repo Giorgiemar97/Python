@@ -1,0 +1,110 @@
+import re
+from collections import Counter
+
+class ATSScorer:
+    def __init__(self):
+        # Define key data analytics keywords
+        self.keywords = [
+            'data', 'analytics', 'reporting', 'microsoft excel', 
+            'excel', 'tableau', 'sql', 'python', 'visualization',
+            'dashboard', 'metrics', 'kpi', 'analysis', 'statistical'
+        ]
+    
+    def extract_text(self, text):
+        """Clean and normalize text"""
+        return text.lower()
+    
+    def find_keywords(self, text):
+        """Find all keywords in text and count occurrences"""
+        text = self.extract_text(text)
+        found_keywords = {}
+        
+        for keyword in self.keywords:
+            # Use word boundaries to match whole words
+            pattern = r'\b' + re.escape(keyword) + r'\b'
+            matches = len(re.findall(pattern, text))
+            if matches > 0:
+                found_keywords[keyword] = matches
+        
+        return found_keywords
+    
+    def calculate_match_score(self, resume_text, job_description):
+        """Calculate how well resume matches job description"""
+        resume_keywords = self.find_keywords(resume_text)
+        job_keywords = self.find_keywords(job_description)
+        
+        if not job_keywords:
+            return 0, resume_keywords, job_keywords
+        
+        # Calculate match percentage
+        matching_keywords = set(resume_keywords.keys()) & set(job_keywords.keys())
+        match_percentage = (len(matching_keywords) / len(job_keywords)) * 100
+        
+        return round(match_percentage, 2), resume_keywords, job_keywords
+    
+    def generate_report(self, resume_text, job_description):
+        """Generate detailed ATS report"""
+        score, resume_kw, job_kw = self.calculate_match_score(resume_text, job_description)
+        
+        print("=" * 60)
+        print("ATS RESUME ANALYSIS REPORT")
+        print("=" * 60)
+        print(f"\nOVERALL MATCH SCORE: {score}%\n")
+        
+        print("KEYWORDS FOUND IN JOB DESCRIPTION:")
+        for kw, count in sorted(job_kw.items(), key=lambda x: x[1], reverse=True):
+            print(f"  • {kw}: {count} occurrence(s)")
+        
+        print("\nKEYWORDS FOUND IN RESUME:")
+        if resume_kw:
+            for kw, count in sorted(resume_kw.items(), key=lambda x: x[1], reverse=True):
+                print(f"  • {kw}: {count} occurrence(s)")
+        else:
+            print("  No keywords found!")
+        
+        print("\nMISSING KEYWORDS:")
+        missing = set(job_kw.keys()) - set(resume_kw.keys())
+        if missing:
+            for kw in sorted(missing):
+                print(f"  • {kw}")
+        else:
+            print("  None - Great job!")
+        
+        print("\n" + "=" * 60)
+        
+        # Provide recommendation
+        if score >= 80:
+            print("RECOMMENDATION: Strong match - Highly recommended")
+        elif score >= 60:
+            print("RECOMMENDATION: Good match - Consider for interview")
+        elif score >= 40:
+            print("RECOMMENDATION: Moderate match - Review carefully")
+        else:
+            print("RECOMMENDATION: Low match - May not be suitable")
+        print("=" * 60)
+
+
+# Example usage
+if __name__ == "__main__":
+    ats = ATSScorer()
+    
+    # Sample job description
+    job_desc = """
+    We are seeking a Data Analyst with strong skills in data analytics and reporting.
+    The ideal candidate will be proficient in Microsoft Excel, Tableau, and SQL.
+    Experience with data visualization and creating dashboards is required.
+    """
+    
+    # Sample resume
+    resume = """
+    Giorgie M - Data Analyst
+    
+    Experience with data analysis and reporting using Microsoft Excel and Tableau.
+    Created dashboards and visualizations for business metrics and KPIs.
+    Proficient in SQL and Python for data manipulation and statistical analysis.
+    """
+    
+    # Generate report
+    ats.generate_report(resume, job_desc)
+    
+    print("\n\nYou can modify the resume and job_desc variables to test different scenarios!")
